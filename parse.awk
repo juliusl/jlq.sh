@@ -14,9 +14,6 @@ function parse_document() {
     # "jlq": "<specify-or-empty-for-PWD>",
     # Start creating index files 
     parse_root();
-    parse_name();
-    parse_value();
-    parse_prompt();
 }
 
 # Parse a root record
@@ -90,11 +87,11 @@ BEGIN {
     # /".</         - the beginning of a prompt on the last line
     FS="\t+\"|\":.?\"|\",[^\b]?<|\",?\b?|.?<-\"|:?\"\",|\".<";
     root_id=0;
-
     print "" > "name_index";
     print "" > "value_index";
     name_id=0;
     value_id=0;
+    offset=0;
 }
 /^#/{
     # Comment
@@ -140,7 +137,7 @@ END {
     }
 }
 
-function print_document(_i, _b, _r, _d, _n, _v) {
+function print_document(_i, _r, _o, _b, _d, _n, _v) {
       _b=branch[_i];
       if (_b != 0) { 
         _r=root[_b];
@@ -150,30 +147,32 @@ function print_document(_i, _b, _r, _d, _n, _v) {
 
         cursor=root_index[_r];
 
-        print_document_root(_b, _r, _d, _n, _v);
+        print_document_root(_r, _b, _d, _n, _v);
       }
 }
 
-function print_document_root(_b, _r, _d, _n, _v) {
+function print_document_root(_r, _b,_d, _n, _v) {
       if (cursor != current_root) {
         print;
         current_root=cursor;
+        offset=0;
         print _r, current_root;
       }
 
       if ( current_root == cursor && _b > 0) {
-          print_coordinates(_b, _r, _d, _n, _v);
+          print_coordinates(_r, offset, _b, _d, _n, _v);
+          offset++;
       }
 }
 
-function print_coordinates(_b,  _r,  _d,  _n, _v) {
+function print_coordinates(_r, _o, _b,  _d, _n, _v) {
         if (_v == 0) {
             _v = 0;
         }
         if ( prompt[_b] ) {
-            print _r, _b, _d, _n, _v, format_prompt( prompt[_b] );
+            print _r, _o, _b, _d, _n, _v, format_prompt( prompt[_b] );
         } else {
             # Tree branch coordinates
-            print _r, _b, _d, _n, _v;
+            print _r, _o, _b, _d, _n, _v;
         }
 }

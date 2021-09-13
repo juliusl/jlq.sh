@@ -44,7 +44,7 @@ function prompt_string(_cl, _v) {
     value_id++;
     value_index[value_id] = sprintf("%s", _v);
     # return update
-    return sprintf("\"%s\": \"%s\"", name_index[$4], value_index[value_id]);
+    return sprintf("\"%s\": \"%s\"", name_index[$5], value_index[value_id]);
 }
 
 function load_names() {
@@ -68,7 +68,7 @@ function load_values() {
 }
 
 function get_line_from_index() {
-    return get_line_from_index_at($4, $5);
+    return get_line_from_index_at($5, $6);
 }
 
 function get_line_from_index_at(_nid, _vid) {
@@ -77,7 +77,7 @@ function get_line_from_index_at(_nid, _vid) {
 
 function print_prompt_from_line() {
     printf "- ";
-    for (i = 7; i <= NF; i++) {
+    for (i = 8; i <= NF; i++) {
         printf "%s ", format_prompt( $i );
     }
     printf "\n";;
@@ -90,12 +90,13 @@ BEGIN {
 }
 
 # Columns 
-# 1 root-id, 
-# 2 line-number, 
-# 3 depth, 
-# 4 name_index, 
-# 5 value_index, 
-# 6 prompt
+# 1 root-id,
+# 2 offset
+# 3 line-number, 
+# 4 depth, 
+# 5 name_index, 
+# 6 value_index, 
+# 7 prompt
 
 # Document line
 $1 ~ /jlq/ {
@@ -104,18 +105,18 @@ $1 ~ /jlq/ {
 
 # Root line
 # 3 "hello2": "",
-$2 ~ /.?\b?"\w+":/ {
+$3 ~ /.?\b?"\w+":/ {
     root[$1] = 0;
 }
 
-# Prompt for a string value
-# 2 7 1 6 0  %s Enter a description this will set the value of family
-$6 ~ /.*%s/ {
+# String prompt
+# 2 1 7 1 6 0  %s Enter a description this will set the value of family
+$7 ~ /.*%s/ {
     line=get_line_from_index();
-    lines[$2]=line;
-    depth[$2]=$3;
+    lines[$3]=line;
+    depth[$3]=$4;
     if (root[$1] == 0) {
-        root[$1]=$2;
+        root[$1]=$3;
     }
 
     # print out the prompt
@@ -128,13 +129,13 @@ $6 ~ /.*%s/ {
     }
 }
 
-# Default prompt
-$6 ~ /.*-/ {
+# Note prompt
+$7 ~ /.*-/ {
     line=get_line_from_index();
-    lines[$2]=line;
-    depth[$2]=$3;
+    lines[$3]=line;
+    depth[$3]=$4;
     if (root[$1] == 0) {
-        root[$1]=$2;
+        root[$1]=$3;
     }
     prompt_default();
     
