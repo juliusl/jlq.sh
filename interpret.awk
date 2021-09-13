@@ -12,6 +12,11 @@ function format_input_cursor(_c) {
     return sprintf("\033[36m%s\033[39m", _c);
 }
 
+# format the update, _c is the cursor value and _u is the new value
+function format_update(_c, _u) {
+    return sprintf("\033[31m%s\033[39m->\033[32m%s\033[39m", _c, _u);
+}
+
 # # Prompt interpreter 
 # # - Uses: 
 # # - prompt
@@ -43,6 +48,12 @@ function prompt_string(_cl, _v) {
     # replace value
     value_id++;
     value_index[value_id] = sprintf("%s", _v);
+    
+    # Maybe this should happen at the end?
+    # if (value_index[value_id] != "") {
+    #     print value_index[value_id] >> "value_index";
+    # }
+    
     # return update
     return sprintf("\"%s\": \"%s\"", name_index[$5], value_index[value_id]);
 }
@@ -125,7 +136,7 @@ $7 ~ /.*%s/ {
 
     # output old value and updated value
     if (get_line_from_index() != updated) {
-        printf "\n\n\033[31m%s\033[39m -> \033[32m%s\033[39m\n\n", get_line_from_index(), updated;
+        print $1, $2, $3, $4, $5, format_update($6, value_id), format_update(get_line_from_index(), updated) >> "interpreted_string_updates";
     }
 }
 
