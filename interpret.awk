@@ -82,8 +82,26 @@ function get_line_from_index() {
     return get_line_from_index_at($5, $6);
 }
 
-function get_line_from_index_at(_nid, _vid) {
-    return sprintf("\"%s\": \"%s\"", name_index[_nid], value_index[_vid]);
+function get_line_from_index_at( _nid, _vid ) {
+    return sprintf("\"%s\": \"%s\"", 
+        get_name_from_index_at( _nid ), 
+        get_value_from_index_at(_vid));
+}
+
+function get_name_from_index() {
+    return get_name_from_index_at( $5 );
+}
+
+function get_name_from_index_at( _nid ) {
+    return name_index[ _nid ];
+}
+
+function get_value_from_index() {
+    return get_value_from_index_at( $6 );
+}
+
+function get_value_from_index_at( _vid, _v ) {
+    return value_index[ _vid ];
 }
 
 function print_prompt_from_line() {
@@ -130,13 +148,17 @@ $7 ~ /.*%s/ {
         root[$1]=$3;
     }
 
+    current=get_value_from_index();
+
     # print out the prompt
     print_prompt_from_line();
     updated=prompt_string(line);
 
     # output old value and updated value
-    if (get_line_from_index() != updated) {
-        print $1, $2, $3, $4, $5, format_update($6, value_id), format_update(get_line_from_index(), updated) >> "interpreted_string_updates";
+    if ( get_line_from_index() != updated ) {
+        print $1, $2, $3, $4, $5, 
+          format_update( $6, value_id ), 
+          format_update( get_value_from_index(),  get_value_from_index_at( value_id ) ) >> "interpreted_string_updates" ;
     }
 }
 
