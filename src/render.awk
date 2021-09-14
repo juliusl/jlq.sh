@@ -8,7 +8,7 @@
 
 function load_names() {
     name_id=0;
-    while ( (getline n < "name_index" ) > 0 ) {
+    while ( (getline n < "jlq_name_index" ) > 0 ) {
         if ( n != "" ) {
           name_id++;
           name_index[name_id]=n;
@@ -18,7 +18,7 @@ function load_names() {
 
 function load_values() {
     value_id=0;
-    while ( (getline v < "value_index" ) > 0 ) {
+    while ( (getline v < "jlq_value_index" ) > 0 ) {
         if (v !=  "") {
           value_id++;
           value_index[value_id]=v;
@@ -31,8 +31,8 @@ function create_output_record(basename, namespace) {
     # each root, (offset == 0) is a "basename": "namespace" so the output record is 
     # namespace basename <extension: example .json>
     #
-    print $1, namespace, basename >> "render.record.out";
-    close("render.record.out");
+    print $1, namespace, basename >> "jlq_render_record_out";
+    close("jlq_render_record_out");
 }
 
 function create_output_record_line() {
@@ -40,11 +40,11 @@ function create_output_record_line() {
 }
 
 BEGIN {
-    print "[output-record]" > "render.record.out";
+    print "[output-record]" > "jlq_render_record_out";
     close("render.record.out");
-    print "" > "render.field.out";
-    print "[output-field]" > "render.field.out";
-    close("render.field.out");
+    print "" > "jlq_render_field_out";
+    print "[output-field]" > "jlq_render_field_out";
+    close("jlq_render_field_out");
     load_names();
     load_values();
     root_dir="";
@@ -89,14 +89,11 @@ $2 > 0 {
 }
 
 END {
-    for (i = 1; i <= length(record); i++) {
+    for (i in record ) {
         if (record[i] != "") {
-            print field[i] >> "render.field.out";
-            close("render.field.out");
+            print field[i] >> "jlq_render_field_out";
+            close("jlq_render_field_out");
         }
     }
 }
 # 
-# 
-# 
-

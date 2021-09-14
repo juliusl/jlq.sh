@@ -37,7 +37,8 @@ function parse_name() {
         # setup reverse lookup
         names[$2]=name_id;
         name[NR]=name_id;
-        print name_index[name_id] >> "name_index";
+        print name_index[name_id] >> "jlq_name_index";
+        close("jlq_name_index");
       }
     }
 }
@@ -50,7 +51,8 @@ function parse_value() {
         value_index[value_id]=$3;
         values[$2]=value_id;
         value[NR]=value_id;
-        print value_index[value_id] >> "value_index";
+        print value_index[value_id] >> "jlq_value_index";
+        close("jlq_value_index");
     }
 }
 
@@ -87,11 +89,15 @@ BEGIN {
     # /".</         - the beginning of a prompt on the last line
     FS="\t+\"|\":.?\"|\",[^\b]?<|\",?\b?|.?<-\"|:?\"\",|\".<";
     root_id=0;
-    print "" > "name_index";
-    print "" > "value_index";
     name_id=0;
     value_id=0;
     offset=0;
+
+    # Clear output
+    print "" > "jlq_name_index";
+    close("jlq_name_index");
+    print "" > "jlq_value_index";
+    close("jlq_value_index");
 }
 /^#/{
     # Comment
@@ -132,8 +138,8 @@ END {
     current_root=root_index[1];
     # Document Root
     print current_root;
-    for (i = 0; i <= length(lines); i++) {
-        print_document(i);
+    for ( line in lines ) {
+        print_document(line);
     }
 }
 

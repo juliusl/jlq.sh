@@ -4,6 +4,6 @@
 	"official": "yi",
 		"alternative": "yi jun",
 			"backup": "yi jun liu"
-"home": "bobo",
-	"introuble": "notjulius", <%s The name called when you are in trouble
+"home": "bobo", <- identity at home
+	"introuble": "", <%s The name my family uses when I'm in trouble
 }

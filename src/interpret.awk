@@ -32,9 +32,6 @@ function print_depth(_d, _t) {
     }
 }
 
-function print_context() {
-}
-
 function prompt_default(_i, _v) {
     printf "%s ", get_line_from_index();
     print_prompt_from_line();
@@ -43,16 +40,12 @@ function prompt_default(_i, _v) {
 }
 
 function prompt_string(_cl, _v) {
-    printf " %s %s", get_line_from_index(), format_input_cursor("<< ");
+    printf " %s %s", get_line_from_index(), format_input_cursor( "<< " );
 	getline _v < "-";
+
     # replace value
     value_id++;
     value_index[value_id] = sprintf("%s", _v);
-    
-    # Maybe this should happen at the end?
-    # if (value_index[value_id] != "") {
-    #     print value_index[value_id] >> "value_index";
-    # }
     
     # return update
     return sprintf("\"%s\": \"%s\"", name_index[$5], value_index[value_id]);
@@ -60,20 +53,22 @@ function prompt_string(_cl, _v) {
 
 function load_names() {
     name_id=0;
-    while ( (getline n < "name_index" ) > 0 ) {
+    while ( (getline n < "jlq_name_index" ) > 0 ) {
         if ( n != "" ) {
           name_id++;
           name_index[name_id]=n;
+          names[n]=name_id;
         }
     }
 }
 
 function load_values() {
     value_id=0;
-    while ( (getline v < "value_index" ) > 0 ) {
+    while ( (getline v < "jlq_value_index" ) > 0 ) {
         if (v !=  "") {
           value_id++;
           value_index[value_id]=v;
+          values[v]=value_id;
         }
     }
 }
@@ -85,7 +80,7 @@ function get_line_from_index() {
 function get_line_from_index_at( _nid, _vid ) {
     return sprintf("\"%s\": \"%s\"", 
         get_name_from_index_at( _nid ), 
-        get_value_from_index_at(_vid));
+        get_value_from_index_at( _vid ));
 }
 
 function get_name_from_index() {
@@ -152,13 +147,13 @@ $7 ~ /.*%s/ {
 
     # print out the prompt
     print_prompt_from_line();
-    updated=prompt_string(line);
+    updated=prompt_string( line );
 
     # output old value and updated value
     if ( get_line_from_index() != updated ) {
         print $1, $2, $3, $4, $5, 
           format_update( $6, value_id ), 
-          format_update( get_value_from_index(),  get_value_from_index_at( value_id ) ) >> "string_prompt_out" ;
+          format_update( get_value_from_index(),  get_value_from_index_at( value_id ) ) >> "jlq_string_prompt_out" ;
     }
 }
 
@@ -171,6 +166,5 @@ $7 ~ /.*-/ {
         root[$1]=$3;
     }
     prompt_default();
-    
 }
 # EOF

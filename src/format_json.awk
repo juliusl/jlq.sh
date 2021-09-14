@@ -3,30 +3,6 @@
 # format_json
 # format render.out to json content
 
-# Example input 
-# [output-record]
-# 1 default jlq
-# 2 default/julius work
-# 3 default/bobo home
-
-# [output-field]
-# 2 1 official yi
-# 2 2 alternative yi jun
-# 2 3 backup yi jun liu
-# 3 1 introuble notjulius
-
-# Example output
-# [default/julius/work]
-# {
-# "official": "yi",
-# "official/alternative": "yi jun",
-# "official/alternative/backup": "yi jun liu"
-# }
-# [default/bobo/home]
-# {
-# "introuble": "notjulius"
-# }
-
 BEGIN {
     last_field="";
     last_depth=0;
@@ -77,4 +53,28 @@ $2 ~ /[0-9]+/ {
 END {
     printf "\n}\n";
 }
+
+# Example input 
+# [output-record]
+# 1 default jlq
+# 2 default/julius work
+# 3 default/bobo home
+
+# [output-field]
+# 2 1 official yi
+# 2 2 alternative yi jun
+# 2 3 backup yi jun liu
+# 3 1 introuble notjulius
+
+# Example output
+# [default/julius/work]
+# {
+# "official": "yi",
+# "official/alternative": "yi jun",
+# "official/alternative/backup": "yi jun liu"
+# }
+# [default/bobo/home]
+# {
+# "introuble": "notjulius"
+# }
 

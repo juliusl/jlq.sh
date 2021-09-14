@@ -1,0 +1,16 @@
+{
+"jlq": "", <- all files must start with this
+	"option":"test", <- just for fun
+"hello": "", <- This is a root <- this shouldn't do anything hopefully
+	"world": "you are round", <- This is a child of "hello"
+	"earth": "you are blue", <- This is a sibling of world, and the root is hello
+	"family": "", <%s Enter a description (this will set the value of family)
+"hello2": "", <- hello
+	"world": "you are rounder",
+		"roundness": "1 rounanesss", <- this is really round
+	"earth": "you are bluer",
+		"blueness": "1 balueness", <- whoa soo blue
+	"family": "you are cooler", <- no you are cool
+		"coolness": "1 colloonease" <- yes I am the coolest
+}
+

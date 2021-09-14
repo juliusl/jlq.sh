@@ -1,48 +1,33 @@
 #!/bin/sh
 # shellcheck disable=SC3043
 
-# Just for fun until it's really useful
-
-# Input
-# {
-#"jlq":"test23",
-#\t"name":"t43d",
-#\t"phone":"234=24350023",
-#"test":"fas5g345-34t34",
-#\t"name": {testt423t4},
-#\t\t\t"phone":"",
-# }
-# {
-# 	"test": "test"
-# }
-
-# Expecting Tokens
-# LineNo TokenType {Token}
-# R   Root token
-# Content
-# -   Default token
-# tree name, depth, key, value
-# ERR Error token
 #
-# 2 R "jlq":"test23",
-# 2 - jlq 0 jlq test23
-# 3 - jlq 1 name t43d
-# 4 - jlq 1 phone 234=24350023
-# 5 R "test":"fas5g345-34t34",
-# 5 - test 0 test fas5g345-34t34
-# 6 ERR test 1 name : {testt423t4},<-<-
-# ERR Invalid Content
-# 7 ERR test 2 phone :
-# ERR Invalid Content
-# END
+# JLQ.sh 
+# Flat tree structure that renders to json
+# Includes tools to annotate and create setup prompts
+# This is useful when designing and managing plugin systems 
+#
 
-# Tokenizer V1
-# tokenize takes a json file and parses the jlq tree
+# Environment
+JLQ_HOME=${JLQ_HOME:-"$HOME/.config/jlq"}
+JLQ_NAMESPACE=${JLQ_NAMESPACE:-"default"}
+JLQ_ROOT="$JLQ_HOME/$JLQ_NAMESPACE"
+JLQ_SOURCE=${JLQ_SOURCE:-""}
+
+if [ "$1" = "init" ]; then 
+  JLQ_SOURCE="$PWD/src"
+  shift;
+fi 
+
+if [ ! -d "$JLQ_SOURCE" ]; then 
+  echo "set JLQ_SOURCE to continue or run \`./jlq.sh init\` from repo root"
+  return 1
+fi
 
 _tokenize() {
 	local jlq=$1
-	if ( ./parse.awk "$jlq" > ./_index ); then
-		echo ./_index
+	if ( "$JLQ_ROOT/parse.awk" "$jlq" > "./jlq_index" ); then
+		echo './jlq_index'
 		return 0;
 	fi
 	return 1;
@@ -51,57 +36,59 @@ alias tokenize=_tokenize
 
 _render() {
 	local index=$1
-	if ( ./render.awk "$index" ); then
-		cat ./render.record.out ./render.field.out > render.out
+	index=${index:-"./jlq_index"}
+	if ( "$JLQ_ROOT/render.awk" "$index" ); then
+		cat "./jlq_render_record_out" "./jlq_render_field_out" > "./jlq_render_out"
 	fi
+	
+	echo "./jlq_render_out"
 }
 alias render=_render
 
 _interpret() {
-	local jlq=$1
-	i=$(_tokenize "$jlq")
-	_render "$i"
+	"$JLQ_ROOT/interpret.awk" "./jlq_index"
+
+	if [ -f "jlq_string_prompt_out" ]; 
+	then
+		:
+	fi
 }
 alias interpret=_interpret
 
 _print_json() {
 	local renderoutput=$1
-	local json_format_out='./json_format_render.out'
-	if [ -f "$renderoutput" ]; then 
-		./format_json.awk "$renderoutput" > $json_format_out
-	fi 
+	renderoutput=${renderoutput:-"jlq_render_out"}
+	local json_format_out="./json_format_render.out"
 
-	# 
-	./format_json_rc.awk $json_format_out | 
-	awk '{ print $1, $2; }' |
-	while read -r f; do
-		mkdir -p "$(dirname "$f")"
+	if [ -f "$renderoutput" ]; then 
+		"$JLQ_ROOT/format_json.awk" "$renderoutput" > "$json_format_out"
+	else
+		echo "Missing render output"
+		return 1;
+	fi
+
+	"$JLQ_ROOT/format_json_rc.awk" "$json_format_out" | 
+	  awk '{ print $1, $2; }' |
+	  while read -r f; do
+		mkdir -p "$JLQ_ROOT/$(dirname "$f")"
 
 		out="$(echo "$f" | cut -d ' ' -f1 )"
-		echo "$f" | awk '{print $2}' | tr -d "'" |
-		if read -r l; then
-			sed -n "$l" "$json_format_out" > "$out"
-		fi 
-	done
-	 
-
+		  echo "$f" | 
+		  awk '{print $2}' | 
+		  tr -d "'" |
+		  if read -r range; then
+		  	outputfile="$JLQ_ROOT/$out"
+			sed -n "$range" "$json_format_out" > "$outputfile"
+			echo "$outputfile"
+		  fi 
+	  done
 }
 alias print_json=_print_json
 
+_install() {
+	mkdir -p "$JLQ_ROOT"
+	cp -rT "$JLQ_SOURCE" "$JLQ_ROOT"
+}
+alias install=_install
 
-#  cat render.out render.line.out
-
-
-# Nice to have features 
-# {
-# "jlq":"", <- all files must start with this
-# "hello": "", <- This is a root
-# 	"world": "you are round", <- This is a child of "hello"
-# 	"earth": "you are blue", <^- This is another child of "hello" and sibling of world
-# 	"family": "you are cool", <^- This is another child of hello and sibling of earth and world
-# "hello2": "", 
-# 	"world": "you are rounder",
-# 	"earth": "you are bluer",
-# 	"family": "you are cooler"
-# }
-# <- this syntax could be proccessed to guide or even create a wizard?
+# EOF
