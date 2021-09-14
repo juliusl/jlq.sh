@@ -158,7 +158,7 @@ $7 ~ /.*%s/ {
     if ( get_line_from_index() != updated ) {
         print $1, $2, $3, $4, $5, 
           format_update( $6, value_id ), 
-          format_update( get_value_from_index(),  get_value_from_index_at( value_id ) ) >> "interpreted_string_updates" ;
+          format_update( get_value_from_index(),  get_value_from_index_at( value_id ) ) >> "string_prompt_out" ;
     }
 }
 

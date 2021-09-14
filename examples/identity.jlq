@@ -1,0 +1,9 @@
+{
+"jlq": "",
+"work": "julius", <- identity at work
+	"official": "yi",
+		"alternative": "yi jun",
+			"backup": "yi jun liu"
+"home": "bobo",
+	"introuble": "notjulius", <%s The name called when you are in trouble
+}

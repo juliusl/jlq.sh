@@ -38,80 +38,59 @@
 
 # Tokenizer V1
 # tokenize takes a json file and parses the jlq tree
-tokenize() {
-	# shellcheck disable=SC3043
-	local file=$1
-	sed 's/\t/<-/g' "$file" | awk -F '"' '
-{
 
-if (NR == 2 && $2 != "jlq") {
-	print "Not JQL, line 2 must start with \"jlq\""
-	exit 1
+_tokenize() {
+	local jlq=$1
+	if ( ./parse.awk "$jlq" > ./_index ); then
+		echo ./_index
+		return 0;
+	fi
+	return 1;
 }
+alias tokenize=_tokenize
 
-tabs=length($1)
+_render() {
+	local index=$1
+	if ( ./render.awk "$index" ); then
+		cat ./render.record.out ./render.field.out > render.out
+	fi
+}
+alias render=_render
 
-if (tabs > 1) {
-	tabs=length($1)/2
+_interpret() {
+	local jlq=$1
+	i=$(_tokenize "$jlq")
+	_render "$i"
 }
+alias interpret=_interpret
 
-# Error checking
-OFS=" "
-TOKEN="-"
-ERR=""
-if (NR > 1 && tabs > 1) {
-	if (LAST+1 != tabs && LAST+2 != tabs+1) {
-		ERR=sprintf("Invalid Transition %d -> %d -> %d", LAST, tabs, tabs+1)
-		TOKEN="ERR"
-	} else {
-		LAST=tabs+1
-	}
-}
-else if (NF%2 == 0 || NF < 5) {
-	ERR=sprintf("Unbalanced line %s", $0)
-	TOKEN="ERR"
-}
-else if (tabs == 0) 
-{
-	ROOT=$2
-	LAST=1
-	print NR, "R", $0
-}
+_print_json() {
+	local renderoutput=$1
+	local json_format_out='./json_format_render.out'
+	if [ -f "$renderoutput" ]; then 
+		./format_json.awk "$renderoutput" > $json_format_out
+	fi 
 
-if ($4 != "" && ERR == "" && TOKEN == "-") {
-	print NR, NF-1, TOKEN, ROOT, tabs, sprintf("%s:", $2), $4
-} else if ($0=="}") {
-	print "END"
-	exit 0
-}
+	# 
+	./format_json_rc.awk $json_format_out | 
+	awk '{ print $1, $2; }' |
+	while read -r f; do
+		mkdir -p "$(dirname "$f")"
 
-if ($0=="{") {
+		out="$(echo "$f" | cut -d ' ' -f1 )"
+		echo "$f" | awk '{print $2}' | tr -d "'" |
+		if read -r l; then
+			sed -n "$l" "$json_format_out" > "$out"
+		fi 
+	done
+	 
 
 }
+alias print_json=_print_json
 
-if ($0 != "{" && ERR != "") {
-	print NR, "ERR", ROOT, tabs, $0
-	print "ERR", ERR
-}
-}
-'
-}
 
-tokenize ./database.json
-if ! tokenize ./notjql.json; then
-	:
-fi
+#  cat render.out render.line.out
 
-query() {
-	local file="$1"
-	local tree="$2"
-	local search="$3"
-	tokenize "$file" | 
-		grep -E "[\d ]+[-R]|(?:ERR).$tree" |
-	    grep -E "$search"
-}
-
-query ./nicetohave.json hello
 
 # Nice to have features 
 # {

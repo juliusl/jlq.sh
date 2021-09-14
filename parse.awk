@@ -132,12 +132,12 @@ END {
     current_root=root_index[1];
     # Document Root
     print current_root;
-    for (i = 1; i <= length(lines); i++) {
+    for (i = 0; i <= length(lines); i++) {
         print_document(i);
     }
 }
 
-function print_document(_i, _r, _o, _b, _d, _n, _v) {
+function print_document(_i, _r, _b, _d, _n, _v) {
       _b=branch[_i];
       if (_b != 0) { 
         _r=root[_b];
@@ -153,10 +153,9 @@ function print_document(_i, _r, _o, _b, _d, _n, _v) {
 
 function print_document_root(_r, _b,_d, _n, _v) {
       if (cursor != current_root) {
-        print;
         current_root=cursor;
         offset=0;
-        print _r, current_root;
+        printf "%d, %s\n", _r, current_root;
       }
 
       if ( current_root == cursor && _b > 0) {
