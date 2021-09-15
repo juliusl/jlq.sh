@@ -1,0 +1,112 @@
+Title			jlq.sh - JLQ shell
+
+# TODO Add .man headers and summary
+
+# Parse and Tokenize
+usage: 		   	tokenize <file>.jlq
+description:   	tokenizes a .jlq file to the jlq_index format
+(required) 		<file>.jlq - Following are examples of .jlq files and what is getting tokenized
+
+<+
+An empty .jlq file looks like this:
+{
+"jlq": ""	
+}
+```
+<+
+
+<+
+A empty .jlq file with a prompt looks like this:
+```
+{
+"jlq": "" <- This is required
+}
+```
+<+
+
+<+
+A empty .jlq file with a string prompt looks like this:
+```
+{
+"jlq": "" <%s Enter a root name
+}
+```
+<+
+
+<+
+A empty .jlq file with a root branch looks like this:
+```
+{
+"jlq": "", <%s Enter a root name <- and now this one does
+"root": "persona1" <- notice that the last line doesn't have a comma 
+}
+```
+<+
+
+<+
+A empty .jlq file with a root branch with a child looks like:
+```
+{
+"jlq": "", <%s Enter a root name <- and now this one does
+"root": "persona1",
+	"child": "Hello" <- This is a child of "root"
+}
+```
+<+
+
+<+
+A empty .jlq file with a root branch with three siblings looks like this:
+```
+{
+"jlq": "", <%s Enter a root name <- and now this one does
+"root": "persona1"
+	"child": "hello" <- This is a child of "root"
+	"child2": "earth" <- This is a child of "root" <- By the way 
+	"child": "world" <- this is okay too, albiet confusing if you don't make the values different 
+}
+```
+<+
+
+<+
+A empty .jlq file with a second root like this: 
+```
+{
+"jlq": "", <%s Enter a root name <- and now this one does
+"root": "persona1"
+	"child": "persona1" <- we can have children too
+		"child of child": "persona1" <- you can do this too if you really wanted
+	"child2": "persona1"
+	"child": "persona1" 
+"root2": "test" <- this doesn't have to be the same name either 
+}
+```
+<+
+
+Tokenize converts these jlq files to the jlq_index_format. From there we can render or interpret that format for
+purposes like interactive config, wizard experiences, presentations, etc. 
+
+# Interpret and Render
+
+usage: 		   	render <jlq_index>
+description:   	outputs a jlq_index to a jlq_render format
+
+usage: 		   	interpret <jlq_index>
+description:   	interpret prompts and cursors (TODO)
+
+(optional) 		jlq_index - If jlq_index is blank, will use jlq_index in current directory
+
+# Templating
+
+usage: 		   	print_json <jlq_render_out>
+description:   	outputs .json files from rendering
+
+usage:			print_golang <jlq_render_out>
+description:	outputs .go files from rendering
+
+(optional) 		jlq_render_out - If jlq_render_out is blank, will use jlq_render_out in current directory
+
+If all of this just rushed onto your screen, then type: 
+
+./jlq.sh demo
+
+to receive a guided tour
