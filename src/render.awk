@@ -6,26 +6,6 @@
 # Output files:
 #
 
-function load_names() {
-    name_id=0;
-    while ( (getline n < "jlq_name_index" ) > 0 ) {
-        if ( n != "" ) {
-          name_id++;
-          name_index[name_id]=n;
-        }
-    }
-}
-
-function load_values() {
-    value_id=0;
-    while ( (getline v < "jlq_value_index" ) > 0 ) {
-        if (v !=  "") {
-          value_id++;
-          value_index[value_id]=v;
-        }
-    }
-}
-
 function create_output_record(basename, namespace) {
     # output record format
     # each root, (offset == 0) is a "basename": "namespace" so the output record is 
@@ -33,10 +13,6 @@ function create_output_record(basename, namespace) {
     #
     print $1, namespace, basename >> "jlq_render_record_out";
     close("jlq_render_record_out");
-}
-
-function create_output_record_line() {
-
 }
 
 BEGIN {

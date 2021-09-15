@@ -1,9 +1,27 @@
 #!/bin/awk -f 
 
-# Formatter
+# parse.awk - parses the current line
+
+# Formatters
+
 function format_prompt(_c) {
     # orange
     return sprintf("\033[33m%s\033[39m", _c);
+}
+
+function format_input_cursor(_c) {
+    # blue
+    return sprintf("\033[36m%s\033[39m", _c);
+}
+
+# format the update, _c is the cursor value and _u is the new value
+function format_update(_c, _u) {
+    # red -> green
+    return sprintf("\033[31m%s\033[39m->\033[32m%s\033[39m", _c, _u);
+}
+
+function format_line(_n, _v) {
+    return sprintf("\"%s\": \"%s\"", _n, _v);
 }
 
 # Parsers
@@ -69,10 +87,11 @@ function parse_prompt() {
 }
 
 # Parse the branch information from the record
-function parse_branch() {
+function parse_branch(_t) {
     branch[NR]=NR;
     root[NR]=root_id;
-    depth[NR]=gsub(/\t/," ",$0);
+    _t=$0;
+    depth[NR]=gsub(/\t/, " ", _t);
 }
 
 # Parse the line information from the record
@@ -80,104 +99,77 @@ function parse_line(_l) {
     lines[NR]=_l;
 }
 
-BEGIN {
-    # Tokenizer
-    # /t+\"/        - beginning of line
-    # /\":.?\"/     - the beginning of the value
-    # /\",[^\b]*</  - the beginning of the prompt
-    # /:?\"\"/      - skip empty values
-    # /".</         - the beginning of a prompt on the last line
-    FS="\t+\"|\":.?\"|\",[^\b]?<|\",?\b?|.?<-\"|:?\"\",|\".<";
-    root_id=0;
+function print_context(_r) {
+    start=(_r + 5);
+    end=(_r - 5);
+
+    for (i = start; i <= end; i++) {
+        print_depth(depth[i]);
+        print lines[i];
+    }
+}
+
+function load_names() {
     name_id=0;
+    while ( (getline n < "jlq_name_index" ) > 0 ) {
+        if ( n != "" ) {
+          name_id++;
+          name_index[name_id]=n;
+          names[n]=name_id;
+        }
+    }
+}
+
+function load_values() {
     value_id=0;
-    offset=0;
-
-    # Clear output
-    print "" > "jlq_name_index";
-    close("jlq_name_index");
-    print "" > "jlq_value_index";
-    close("jlq_value_index");
-}
-/^#/{
-    # Comment
-    parse_line($0);
-}
-/^{|}/ {
-    # Begin/End document
-    parse_line($0);
-}
-/^".*$/ {
-    # Root record start
-    parse_line(sprintf("\"%s\": \"%s\"", $2, $3));
-    
-    # Create index files
-    if (root_id == 1) {
-        parse_document();
-    } else {
-        parse_root();
-    }
-    
-    parse_branch();
-    parse_name();
-    parse_value();
-    parse_prompt();
-}
-/\t+/ {
-    # Branch start    
-    line=NR;
-    parse_line(sprintf("\"%s\": \"%s\"", $2, $3));
-
-    # Parse depth
-    parse_branch();
-    parse_name();
-    parse_value();
-    parse_prompt();
-}
-END { 
-    current_root=root_index[1];
-    # Document Root
-    print current_root;
-    for ( line in lines ) {
-        print_document(line);
+    while ( (getline v < "jlq_value_index" ) > 0 ) {
+        if (v !=  "") {
+          value_id++; 
+          value_index[value_id]=v;
+          values[v]=value_id;
+        }
     }
 }
 
-function print_document(_i, _r, _b, _d, _n, _v) {
-      _b=branch[_i];
-      if (_b != 0) { 
-        _r=root[_b];
-        _d=depth[_b];
-        _n=name[_b];
-        _v=value[_b];
-
-        cursor=root_index[_r];
-
-        print_document_root(_r, _b, _d, _n, _v);
-      }
+function get_line_from_index() {
+    return get_line_from_index_at($5, $6);
 }
 
-function print_document_root(_r, _b,_d, _n, _v) {
-      if (cursor != current_root) {
-        current_root=cursor;
-        offset=0;
-        printf "%d, %s\n", _r, current_root;
-      }
-
-      if ( current_root == cursor && _b > 0) {
-          print_coordinates(_r, offset, _b, _d, _n, _v);
-          offset++;
-      }
+function get_line_from_index_at( _nid, _vid ) {
+    return sprintf("\"%s\": \"%s\"", 
+        get_name_from_index_at( _nid ), 
+        get_value_from_index_at( _vid ));
 }
 
-function print_coordinates(_r, _o, _b,  _d, _n, _v) {
-        if (_v == 0) {
-            _v = 0;
-        }
-        if ( prompt[_b] ) {
-            print _r, _o, _b, _d, _n, _v, format_prompt( prompt[_b] );
-        } else {
-            # Tree branch coordinates
-            print _r, _o, _b, _d, _n, _v;
-        }
+
+function get_name_from_index() {
+    return get_name_from_index_at( $5 );
+}
+
+function get_name_from_index_at( _nid ) {
+    return name_index[ _nid ];
+}
+
+function get_value_from_index() {
+    return get_value_from_index_at( $6 );
+}
+
+function get_value_from_index_at( _vid, _v ) {
+    return value_index[ _vid ];
+}
+
+function print_prompt_from_line() {
+    printf "- ";
+    for (i = 8; i <= NF; i++) {
+        printf "%s ", format_prompt( $i );
+    }
+    printf "\n";;
+}
+
+function print_string_line_update(_l, _u, _ov, _nv) {
+    if ( _l != _u ) {
+        print $1, $2, $3, $4, $5, 
+          format_update( $6, _ov ),
+          format_update( _ov,  get_value_from_index_at( _nv ) ) >> "jlq_string_prompt_out" ;
+    }
 }
